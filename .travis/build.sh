@@ -5,22 +5,12 @@ set -x
 
 cmake --version
 
-if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
-    export CC=gcc-6
-    export CXX=g++-6
-    export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
-
-    mkdir build && cd build
-    cmake .. -DDYNARMIC_USE_SYSTEM_BOOST=0 -DBoost_INCLUDE_DIRS=${PWD}/../externals/ext-boost -DCMAKE_BUILD_TYPE=Release
-    make -j4
-
-    ctest -VV -C Release
+if [ ! -z "$EMULATE_AARCH64" ]; then
+    ./.travis/emulate-aarch64.sh
+elif [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
+    ./.travis/build-x86_64-linux.sh
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    set -o pipefail
-
-    export MACOSX_DEPLOYMENT_TARGET=10.9
-
-    mkdir build && cd build
-    cmake .. -GXcode -DDYNARMIC_USE_SYSTEM_BOOST=0 -DBoost_INCLUDE_DIRS=${PWD}/../externals/ext-boost -DDYNARMIC_TESTS=0
-    xcodebuild -configuration Release
+    ./.travis/build-x86_64-macos.sh
+else
+    exit 1
 fi
